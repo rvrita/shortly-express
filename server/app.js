@@ -98,15 +98,21 @@ app.post('/login', (req, res, next) => {
   var username = req.body.username;
   var password = req.body.password;
   // check DB for both username and password
-  models.Users.get({ username: username, password: password })
-    .then(user => {
-      if (user === undefined) {
+  models.Users.get({ username: username })
+    .then(userData => { // username salt hash
+      if (userData == undefined) {
+        console.log('in no user', user)
         res.redirect('/login');
       } else {
-        res.redirect('/');
+        if (models.Users.compare(password, userData.password, userData.salt)) {
+          res.redirect('/');
+        } else {
+          res.redirect('/login');
+        }
       }
     })
     .catch(() => {
+      console.log('in catch');
       res.redirect('/login');
     });
   // models.Users.create({username, password});

@@ -60,7 +60,7 @@ class Model {
     // console.log("rest ---->", rest);
     return executeQuery(queryString, parsedOptions.values).then(results => {
       console.log('results ---->>> ', results);
-      results[0];
+      return results[0];
     });
   }
 
