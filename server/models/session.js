@@ -33,6 +33,8 @@ class Sessions extends Model {
    * match the options, the promise will only be fulfilled with one.
    */
   get(options) {
+    // console.log("options ----->>>", options);
+
     return super.get.call(this, options)
       .then(session => {
         if (!session || !session.userId) {
