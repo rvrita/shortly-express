@@ -53,13 +53,13 @@ class Model {
   get(options) {
     // console.log("options ---->>>>", options)
     let parsedOptions = parseData(options);
-    console.log('parsedOptions -->', parsedOptions);
+    // console.log('parsedOptions -->', parsedOptions);
     let queryString = `SELECT * FROM ${this.tablename} WHERE ${parsedOptions.string.join(' AND ')} LIMIT 1`;
     // console.log("-------------TABLE --->>", queryString)
     // let rest = db.query( 'select * from users').then(res => res);
     // console.log("rest ---->", rest);
     return executeQuery(queryString, parsedOptions.values).then(results => {
-      console.log('results ---->>> ', results);
+      // console.log('results ---->>> ', results);
       return results[0];
     });
   }

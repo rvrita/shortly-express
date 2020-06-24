@@ -100,8 +100,8 @@ app.post('/login', (req, res, next) => {
   // check DB for both username and password
   models.Users.get({ username: username })
     .then(userData => { // username salt hash
-      if (userData == undefined) {
-        console.log('in no user', user)
+      if (userData === undefined) {
+        // console.log('in no user', user);
         res.redirect('/login');
       } else {
         if (models.Users.compare(password, userData.password, userData.salt)) {
@@ -112,12 +112,9 @@ app.post('/login', (req, res, next) => {
       }
     })
     .catch(() => {
-      console.log('in catch');
+      // console.log('in catch');
       res.redirect('/login');
     });
-  // models.Users.create({username, password});
-  //
-  // res.status(200).send('Success!');
 });
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail
