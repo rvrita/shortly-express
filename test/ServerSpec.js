@@ -371,7 +371,7 @@ describe('', function() {
       });
     });
 
-    describe('Session Parser', function() {
+    describe.only('Session Parser', function() {
       it('initializes a new session when there are no cookies on the request', function(done) {
         var requestWithoutCookies = httpMocks.createRequest();
         var response = httpMocks.createResponse();
@@ -390,7 +390,10 @@ describe('', function() {
         var response = httpMocks.createResponse();
 
         createSession(requestWithoutCookie, response, function() {
+        // console.log("response from TEESTSS ", requestWithoutCookie, response)
+
           var cookies = response.cookies;
+          // console.log("cookies ^^^^^^^^^^^^^ ", cookies);
           expect(cookies['shortlyid']).to.exist;
           expect(cookies['shortlyid'].value).to.exist;
           done();
