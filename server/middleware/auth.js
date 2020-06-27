@@ -1,4 +1,4 @@
-const models = require('../models');
+const { Users, Sessions } = require('../models');
 const Promise = require('bluebird');
 const cookieParser = require('./cookieParser');
 
@@ -22,29 +22,39 @@ module.exports.createSession = (req, res, next) => {
   //   });
 
 
-
+  console.log('in createsession', req);
   // we check the cookies
   if (!req.cookies.hasOwnProperty('shortlyid')) {
-    models.Sessions.create()
-      .then(result =>
-        models.Sessions.get({ id: result.insertId }))
-      .then(anotherResult => {
-        // console.log('+++++++++++++++',anotherResult);
+    // console.log('first if',req);
+    Sessions.create()  // insert into session id, hash, userId
+      .then(result => { return Sessions.get({ id: result.insertId }); }) // get from session table record for given userId
+      .then(sessionTableResults => {
+        console.log('+++++++++++++++', sessionTableResults);
         req.session = {
-          hash: anotherResult.hash
+          hash: sessionTableResults.hash,
+          // username: userTableResults.username,
+          // userId: userTableResults.id
         };
-        res.cookie('shortlyid', anotherResult.hash);
+        res.cookie('shortlyid', sessionTableResults.hash);
+        // console.log('++++++++ res',res);
+        // console.log('++++++++ req',req);
         next();
+
+        //
+        // });
       });
   } else {
+    console.log('ELSE'); // use update
+
     req.session = {
       hash: req.cookies.shortlyid
     };
-    if (models.Sessions.isLoggedIn(req.session)) {
+    if (Sessions.isLoggedIn(req.session)) {
       // req.cookies.shortlyid
       next();
     } else {
       res.redirect('/login');
+      next();
     }
   }
   // if it's empty

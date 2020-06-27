@@ -4,8 +4,9 @@ const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
-const models = require('./models');
-
+const cookieParser = require('./middleware/cookieParser');
+const { Users, Sessions, Links, Clicks } = require('./models');
+// const {Users} = models;
 const app = express();
 
 app.set('views', `${__dirname}/views`);
@@ -14,6 +15,9 @@ app.use(partials());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(cookieParser());
+app.use(Auth.createSession());
+// app.use(app.router);
 
 
 
@@ -29,7 +33,7 @@ app.get('/create',
 
 app.get('/links',
   (req, res, next) => {
-    models.Links.getAll()
+    Links.getAll()
       .then(links => {
         res.status(200).send(links);
       })
@@ -41,27 +45,27 @@ app.get('/links',
 app.post('/links',
   (req, res, next) => {
     var url = req.body.url;
-    if (!models.Links.isValidUrl(url)) {
+    if (!Links.isValidUrl(url)) {
       // send back a 404 if link is not valid
       return res.sendStatus(404);
     }
 
-    return models.Links.get({ url })
+    return Links.get({ url })
       .then(link => {
         if (link) {
           throw link;
         }
-        return models.Links.getUrlTitle(url);
+        return Links.getUrlTitle(url);
       })
       .then(title => {
-        return models.Links.create({
+        return Links.create({
           url: url,
           title: title,
           baseUrl: req.headers.origin
         });
       })
       .then(results => {
-        return models.Links.get({ id: results.insertId });
+        return Links.get({ id: results.insertId });
       })
       .then(link => {
         throw link;
@@ -85,8 +89,11 @@ app.post('/signup', (req, res, next) => {
   var password = req.body.password;
   // console.log("password", password)
   let userName = { username };
-  models.Users.create({ username, password })
+  // session and userid - update
+  Users.create({ username, password })
     .then(() => {
+      // take the hash from the req
+      // update the session w the hash and add the userid to hash
       res.redirect('/');
     })
     .catch(() => {
@@ -99,15 +106,31 @@ app.post('/login', (req, res, next) => {
   var username = req.body.username;
   var password = req.body.password;
   // check DB for both username and password
-  models.Users.get({ username: username })
-    .then(userData => { // username salt hash
+
+
+
+
+
+  Users.get({ username: username })// Nick, password1
+    .then(userData => { // username salt passw.hash id
       if (userData === undefined) {
         // console.log('in no user', user);
+        console.log('no userData line 114');
         res.redirect('/login');
       } else {
-        if (models.Users.compare(password, userData.password, userData.salt)) {
+        // validate password for user that was found in DB
+        if (Users.compare(password, userData.password, userData.salt)) {
+          console.log('right name/passw, line 119', userData);
+          console.log('right name/passw', req.session);
+          // var hash = req.session.hash;
+          // Sessions.update({ hash }, { userId: userData.id }).then(() => {
+          //   res.redirect('/');
+          //   console.log('right name/passw, line 123');
+          // });
           res.redirect('/');
+
         } else {
+          console.log('login fails, line 126');
           res.redirect('/login');
         }
       }
@@ -125,16 +148,16 @@ app.post('/login', (req, res, next) => {
 
 app.get('/:code', (req, res, next) => {
 
-  return models.Links.get({ code: req.params.code })
+  return Links.get({ code: req.params.code })
     .tap(link => {
 
       if (!link) {
         throw new Error('Link does not exist');
       }
-      return models.Clicks.create({ linkId: link.id });
+      return Clicks.create({ linkId: link.id });
     })
     .tap(link => {
-      return models.Links.update(link, { visits: link.visits + 1 });
+      return Links.update(link, { visits: link.visits + 1 });
     })
     .then(({ url }) => {
       res.redirect(url);
